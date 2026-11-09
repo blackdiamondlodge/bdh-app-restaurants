@@ -83,6 +83,19 @@ def _refresh_photos(restaurant, key, now):
     return len(new)
 
 
+def _claim(restaurant, field, max_age, now, force=False):
+    """Atomically mark ``field`` as fetched now, unless another refresh (page
+    thread or management command, possibly another process) already has.
+    Only the run that wins the claim calls Google, so overlapping refreshes
+    never pay twice or save duplicate photos."""
+    rows = Restaurant.objects.filter(pk=restaurant.pk)
+    cutoff = now if force else now - max_age
+    claimed = rows.filter(Q(**{f"{field}__isnull": True}) | Q(**{f"{field}__lt": cutoff})).update(**{field: now})
+    if claimed:
+        setattr(restaurant, field, now)
+    return bool(claimed)
+
+
 def refresh(force=False, now=None):
     """Fetch details (daily) and photos (monthly) for places that need it.
 
@@ -98,24 +111,22 @@ def refresh(force=False, now=None):
     places = Restaurant.objects.exclude(place_id="") if force else _stale(now)
     counts = {"details": 0, "photos": 0, "errors": 0, "skipped": False}
     for restaurant in places:
-        if force or not restaurant.fetched_at or restaurant.fetched_at < now - DETAILS_MAX_AGE:
-            restaurant.fetched_at = now
+        if _claim(restaurant, "fetched_at", DETAILS_MAX_AGE, now, force):
             try:
                 restaurant.data = fetch_details(restaurant.place_id, key)
+                restaurant.save(update_fields=["data"])
                 counts["details"] += 1
             except (requests.RequestException, ValueError) as e:
                 log.warning("restaurants: details for %s failed: %s", restaurant.slug, e)
                 counts["errors"] += 1
-            restaurant.save(update_fields=["data", "fetched_at"])
-        photos_stale = not restaurant.photos_fetched_at or restaurant.photos_fetched_at < now - PHOTOS_MAX_AGE
-        if restaurant.data and photos_stale:
-            restaurant.photos_fetched_at = now
+        else:
+            restaurant.refresh_from_db(fields=["data"])
+        if restaurant.data and _claim(restaurant, "photos_fetched_at", PHOTOS_MAX_AGE, now):
             try:
                 counts["photos"] += _refresh_photos(restaurant, key, now)
             except (requests.RequestException, ValueError) as e:
                 log.warning("restaurants: photos for %s failed: %s", restaurant.slug, e)
                 counts["errors"] += 1
-            restaurant.save(update_fields=["photos_fetched_at"])
     return counts
 
 

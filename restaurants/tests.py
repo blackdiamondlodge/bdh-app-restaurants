@@ -156,6 +156,23 @@ class RefreshTests(TestCase):
         self.assertEqual(counts["photos"], 3)
         self.assertEqual(Photo.objects.count(), 3)
 
+    def test_overlapping_refreshes_fetch_and_save_once(self):
+        # A second refresh (page thread vs management command) starts while
+        # the first is downloading photos: it must not call Google again.
+        nested = []
+
+        def get(url, **kwargs):
+            if url.endswith("/media") and not nested:
+                nested.append(places.refresh())
+            return self.fake_get(url, **kwargs)
+
+        with patch("restaurants.places.requests.get", side_effect=get) as mock:
+            counts = places.refresh()
+        self.assertEqual(nested[0], {"details": 0, "photos": 0, "errors": 0, "skipped": False})
+        self.assertEqual((counts["details"], counts["photos"]), (1, 3))
+        self.assertEqual(mock.call_count, 4)
+        self.assertEqual(self.r.photos.count(), 3)
+
     def test_failure_keeps_old_data_and_waits_a_day(self):
         self.r.data = {"rating": 4.0}
         self.r.save()
