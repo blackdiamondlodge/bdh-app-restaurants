@@ -11,7 +11,7 @@ PLACES = [
     ('cahilty-creek-kitchen-taproom', 'Cahilty Creek Kitchen & Taproom', 'pub', 'apres dinner', 'ChIJjQTGSpyyf1MRHr1VHTg1G3c'),
     ('capones-italian-kitchen', 'Capones Italian Kitchen', 'italian', 'dinner', 'ChIJNw_ihAWzf1MRjs4u51FYRVM'),
     ('chez-joe-poutine', 'Chez Joe Poutine', 'burger', 'lunch', 'ChIJVQ3knZuyf1MRKff8GHjKBs0'),
-    ('fondue-stube', 'Fondue Stube', 'fondue', 'dinner', ''),
+    ('fondue-stube', 'Fondue Stube', 'fondue', 'dinner', 'ChIJ170scZKzf1MRAFWzW1nLhoY'),
     ('grand-mornings', 'Grand Mornings', 'cafe', 'breakfast', 'ChIJb1EYq8mzf1MRrGJxwPz6Sdk'),
     ('mantles-restaurant-lounge', 'Mantles Restaurant & Lounge', 'fine', 'breakfast dinner', 'ChIJ3_dg7JKyf1MRQxd6vsQM4Jc'),
     ('masas-bar-grill', "Masa's Bar & Grill", 'pub', 'apres lunch dinner', 'ChIJhYRUgZyyf1MRNm4x52tSSw4'),
