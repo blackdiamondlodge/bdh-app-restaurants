@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bdh-app-restaurants"
+version = "1.0.0"
+description = "Black Diamond Hub app: Sun Peaks restaurants with Google ratings, hours, photos and a guest shortlist"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+dependencies = [
+    "bdh-sdk>=0.1,<1",
+    "requests",
+]
+
+[project.urls]
+Source = "https://github.com/blackdiamondlodge/bdh-app-restaurants"
+
+[project.entry-points."blackdiamondhub.plugins"]
+restaurants = "restaurants.plugin:spec"
+
+[tool.setuptools.packages.find]
+include = ["restaurants", "restaurants.*"]
+
+[tool.setuptools.package-data]
+restaurants = [
+    "templates/**/*",
+    "static/**/*",
+    "migrations/*.py",
+]
