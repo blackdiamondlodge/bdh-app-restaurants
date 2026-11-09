@@ -4,7 +4,7 @@
   const C = JSON.parse(document.getElementById("rs-config").textContent);
   const $ = id => document.getElementById(id);
   const ov = $("rs-ov"), sov = $("rs-sov"), dlg = $("rs-dlg");
-  const STORE = "rs-shortlist", IDLE_MS = 30 * 60 * 1000, MAX = 8;
+  const STORE = "rs-shortlist", MAX = 8;
   const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
   const bg = (d, i = 0) => d.photos && d.photos[i] ? `background-image:url('${d.photos[i].url}')` : "";
 
@@ -20,16 +20,23 @@
     el.innerHTML = stars(d.rating, d.count);
   });
 
-  // ── Shortlist: kept in localStorage, cleared after 30 idle minutes ──
-  let list = [], touched = Date.now();
+  // ── Shortlist: kept in localStorage for the whole stay ──
+  // Cleared only when a different stay begins. A list made with no stay showing
+  // (early arrival, or HA unreachable) is adopted by the next stay instead.
+  const stay = document.querySelector(".rs-wrap").dataset.stay || "";
+  let list = [], owner = stay;
   try {
     const saved = JSON.parse(localStorage.getItem(STORE) || "null");
-    if (saved && Date.now() - saved.t < IDLE_MS) list = saved.list.filter(s => D[s]);
+    if (saved && Array.isArray(saved.list)) {
+      const prev = saved.stay || "";
+      if (!stay || !prev || prev === stay) {
+        list = saved.list.filter(s => D[s]);
+        owner = stay || prev;
+      }
+    }
   } catch (e) { /* ignore */ }
-  const persist = () => { try { localStorage.setItem(STORE, JSON.stringify({list, t: touched})); } catch (e) { /* ignore */ } };
-  const activity = () => { touched = Date.now(); if (list.length) persist(); };
-  ["pointerdown", "keydown"].forEach(ev => document.addEventListener(ev, activity, {passive: true}));
-  setInterval(() => { if (list.length && Date.now() - touched > IDLE_MS) { list = []; sync(); } }, 30 * 1000);
+  const persist = () => { try { localStorage.setItem(STORE, JSON.stringify({list, stay: owner})); } catch (e) { /* ignore */ } };
+  persist();
 
   function sync() {
     document.querySelectorAll(".hb").forEach(b => {
@@ -52,7 +59,7 @@
     }
     persist();
   }
-  function toggle(s) { list = list.includes(s) ? list.filter(x => x !== s) : [s, ...list].slice(0, MAX); touched = Date.now(); sync(); }
+  function toggle(s) { list = list.includes(s) ? list.filter(x => x !== s) : [s, ...list].slice(0, MAX); sync(); }
 
   // ── Details ──
   function qrSvg(text) {

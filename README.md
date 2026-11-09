@@ -34,6 +34,9 @@ Google `place_id` for data).
 
 ## Shortlist
 
-Guests heart places (stored in the browser, cleared after 30 min idle). "Send
+Guests heart places (stored in the kiosk browser for the whole stay). The list
+resets when a different stay begins, using the hub's `hub_stay_key` template
+variable; checkout or an HA outage never clears it, and a list started before a
+stay shows up is kept for that stay. "Send
 list to my phone" shows a QR to the static shortlist page, with the list encoded
 in the URL hash — nothing is stored server-side and it works off the lodge LAN.
