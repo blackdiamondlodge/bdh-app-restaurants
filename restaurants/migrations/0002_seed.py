@@ -19,7 +19,7 @@ PLACES = [
     ('mountain-high-pizza', 'Mountain High Pizza', 'pizza', 'lunch dinner', 'ChIJh6TaB5uyf1MRzNKxQHlPa3Y'),
     ('oya-japanese-cuisine-sun-peaks', 'Oya Japanese Cuisine', 'japanese', 'dinner', 'ChIJh0GHewuzf1MRZpzFFuhiFgE'),
     ('powder-hounds', 'Powder Hounds', 'german', 'dinner', 'ChIJf_dLCJuyf1MRPCALtPFa_W4'),
-    ('steakhouse-at-sun-peaks-lodge', 'Steakhouse at Sun Peaks Lodge', 'fine', 'dinner', ''),
+    ('steakhouse-at-sun-peaks-lodge', 'Steakhouse at Sun Peaks Lodge', 'fine', 'dinner', 'ChIJIXUJgZuyf1MRZI5yG-WlyHY'),
     ('sunburst-bar-eatery', 'Sunburst Bar & Eatery', 'family', 'lunch apres', 'ChIJA-NY4pqyf1MRweDjGjmA6PE'),
     ('tod-mountain-cafe', 'Tod Mountain Café', 'cafe', 'coffee breakfast', 'ChIJh6TaB5uyf1MRGucE0WP-vFw'),
     ('umbrella-cafe', 'Umbrella Café', 'cafe', 'coffee breakfast', 'ChIJt66hF56yf1MRJ9DncIwEGVU'),

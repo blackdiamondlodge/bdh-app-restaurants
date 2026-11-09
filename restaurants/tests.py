@@ -70,6 +70,7 @@ class StatusTests(TestCase):
         always = place(regularOpeningHours={"periods": [{"open": {"day": 0, "hour": 0, "minute": 0}}]})
         self.assertEqual(catalog.status(always, local(2026, 11, 9, 3)), ("open", "Open 24 hours"))
         self.assertEqual(catalog.status(place(businessStatus="CLOSED_TEMPORARILY"))[0], "season")
+        self.assertEqual(catalog.status(place(businessStatus="FUTURE_OPENING")), ("season", "Opening soon"))
         self.assertEqual(catalog.status({}), ("unknown", "Hours unavailable"))
         self.assertEqual(catalog.status(place(regularOpeningHours={}))[0], "unknown")
 
