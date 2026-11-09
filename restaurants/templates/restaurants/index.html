@@ -31,10 +31,11 @@
 
     <div class="rs-grid" id="rs-grid">
       {% for r in items %}
-      <div class="rc{% if r.hidden %} hidden{% endif %}" role="button" tabindex="0" data-slug="{{ r.slug }}" data-tags="{{ r.tags }}" style="--c1:{{ r.c1 }};--c2:{{ r.c2 }}">
+      <div class="rc{% if r.hidden %} hidden{% endif %}{% if r.st.0 == 'season' %} off{% endif %}" role="button" tabindex="0" data-slug="{{ r.slug }}" data-tags="{{ r.tags }}" style="--c1:{{ r.c1 }};--c2:{{ r.c2 }}">
         <div class="art{% if r.photos %} ph{% endif %}"{% if r.photos %} style="background-image:url('{{ r.photos.0.url }}')"{% endif %}>
           {% if not r.photos %}<i class="fas {{ r.icon }}"></i>{% endif %}
           {% if r.pick %}<span class="pick"><i class="fas fa-star"></i> Owner's pick</span>{% endif %}
+          {% if r.st.0 == 'season' %}<span class="offb"><i class="fas fa-calendar-xmark"></i> {{ r.st.1 }}</span>{% endif %}
           <button type="button" class="hb" data-h="{{ r.slug }}" aria-label="Add to shortlist"><i class="far fa-heart"></i></button>
         </div>
         <div class="body">

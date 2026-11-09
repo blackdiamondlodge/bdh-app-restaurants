@@ -187,7 +187,7 @@
   const hasL = () => typeof L !== "undefined";
   const lodgeIcon = () => L.divIcon({className: "", html: '<div class="lpin"><span>BDL</span></div>', iconSize: [34, 34], iconAnchor: [17, 17]});
   const rIcon = d => L.divIcon({className: "", iconSize: [44, 44], iconAnchor: [22, 22],
-    html: `<div class="rpin${d.pick ? " pk" : ""}" style="--c1:${d.c1};--c2:${d.c2};${bg(d)}">${d.photos.length ? "" : `<i class="fas ${d.icon}"></i>`}</div><div class="rlab">${esc(d.name)}</div>`});
+    html: `<div class="rpin${d.pick ? " pk" : ""}${d.st[0] === "season" ? " off" : ""}" style="--c1:${d.c1};--c2:${d.c2};${bg(d)}">${d.photos.length ? "" : `<i class="fas ${d.icon}"></i>`}</div><div class="rlab">${esc(d.name)}</div>`});
   let mini, big, clus;
   const bigM = {};
 
