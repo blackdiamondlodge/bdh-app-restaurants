@@ -105,7 +105,7 @@ class CatalogTests(TestCase):
 class SeedTests(TestCase):
     def test_seeded(self):
         self.assertEqual(Restaurant.objects.count(), 23)
-        self.assertEqual(Restaurant.objects.exclude(place_id="").count(), 21)
+        self.assertEqual(Restaurant.objects.exclude(place_id="").count(), 22)
         self.assertFalse(Restaurant.objects.filter(pick=True).exists())
 
 
