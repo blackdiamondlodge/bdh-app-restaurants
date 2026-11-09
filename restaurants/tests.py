@@ -70,6 +70,7 @@ class StatusTests(TestCase):
         always = place(regularOpeningHours={"periods": [{"open": {"day": 0, "hour": 0, "minute": 0}}]})
         self.assertEqual(catalog.status(always, local(2026, 11, 9, 3)), ("open", "Open 24 hours"))
         self.assertEqual(catalog.status(place(businessStatus="CLOSED_TEMPORARILY"))[0], "season")
+        self.assertEqual(catalog.status(place(businessStatus="FUTURE_OPENING")), ("season", "Opening soon"))
         self.assertEqual(catalog.status({}), ("unknown", "Hours unavailable"))
         self.assertEqual(catalog.status(place(regularOpeningHours={}))[0], "unknown")
 
@@ -104,7 +105,7 @@ class CatalogTests(TestCase):
 class SeedTests(TestCase):
     def test_seeded(self):
         self.assertEqual(Restaurant.objects.count(), 23)
-        self.assertEqual(Restaurant.objects.exclude(place_id="").count(), 21)
+        self.assertEqual(Restaurant.objects.exclude(place_id="").count(), 22)
         self.assertFalse(Restaurant.objects.filter(pick=True).exists())
 
 

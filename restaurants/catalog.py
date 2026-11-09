@@ -104,6 +104,8 @@ def status(data, now=None):
         return ("season", "Closed for the season")
     if business == "CLOSED_PERMANENTLY":
         return ("season", "Permanently closed")
+    if business == "FUTURE_OPENING":
+        return ("season", "Opening soon")
     periods = [p for p in (data.get("regularOpeningHours") or {}).get("periods") or [] if p.get("open")]
     if not periods:
         return ("unknown", "Hours unavailable")
