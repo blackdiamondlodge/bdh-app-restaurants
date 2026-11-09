@@ -62,10 +62,30 @@
   function toggle(s) { list = list.includes(s) ? list.filter(x => x !== s) : [s, ...list].slice(0, MAX); sync(); }
 
   // ── Details ──
+  // Same look as the Wi-Fi app's QR: round dots, square finder patterns (rounded
+  // ones break some decoders) and the lodge monogram over a cleared centre.
+  const QR_INK = "#0b1622", QR_BORDER = 2;  // the .qr box's white padding adds to the quiet zone
+  const MONOGRAM = '<polygon points="50,3 97,50 50,97 3,50" fill="#0b1622"/><polygon points="50,11 89,50 50,89 11,50" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="1.5"/><path fill="#fff" d="M28 56.67V55.59H29.71V44.41H28V43.33H35.9Q38.34 43.33 39.57 44.15Q40.79 44.98 40.79 46.63Q40.79 47.82 39.95 48.51Q39.1 49.21 37.44 49.39Q39.45 49.58 40.52 50.46Q41.59 51.34 41.59 52.81Q41.59 54.79 40.1 55.73Q38.6 56.67 35.41 56.67ZM33.14 48.9H34.32Q35.85 48.9 36.59 48.34Q37.33 47.78 37.33 46.63Q37.33 45.47 36.62 44.94Q35.9 44.41 34.32 44.41H33.14ZM33.14 55.59H34.42Q36.13 55.59 36.95 54.91Q37.77 54.23 37.77 52.81Q37.77 51.38 36.94 50.67Q36.11 49.97 34.42 49.97H33.14ZM49.14 55.59H50.38Q52.47 55.59 53.44 54.25Q54.41 52.91 54.41 49.99Q54.41 47.08 53.45 45.75Q52.48 44.41 50.38 44.41H49.14ZM44 56.67V55.59H45.7V44.41H44V43.33H50.84Q54.43 43.33 56.33 45.05Q58.24 46.76 58.24 49.99Q58.24 53.23 56.33 54.95Q54.42 56.67 50.84 56.67ZM60.4 56.67V55.59H62.1V44.41H60.4V43.33H67.26V44.41H65.54V55.44H70.79V53.34H72V56.67Z"/>';
   function qrSvg(text) {
     if (typeof qrcode === "undefined") return "";
-    const q = qrcode(0, "M"); q.addData(text); q.make();
-    return q.createSvgTag({cellSize: 4, margin: 1, scalable: true});
+    // Level H survives the logo best; long shortlist links drop to Q with a smaller
+    // logo so the code isn't too dense to scan off the screen.
+    const long = text.length > 200, q = qrcode(0, long ? "L" : "H");
+    q.addData(text); q.make();
+    const m = q.getModuleCount(), n = m + 2 * QR_BORDER, B = QR_BORDER;
+    const fins = [[0, 0], [0, m - 7], [m - 7, 0]];
+    const hole = Math.round(m * (long ? .14 : .24)) | 1, h0 = (m - hole) / 2, h1 = h0 + hole;
+    const skip = (r, c) => fins.some(([fr, fc]) => r >= fr && r < fr + 7 && c >= fc && c < fc + 7) ||
+      (r >= h0 - 1 && r <= h1 && c >= h0 - 1 && c <= h1);
+    let dots = "";
+    for (let r = 0; r < m; r++) for (let c = 0; c < m; c++)
+      if (q.isDark(r, c) && !skip(r, c)) dots += `<circle cx="${c + B + .5}" cy="${r + B + .5}" r=".46"/>`;
+    const eyes = fins.map(([r, c]) => `<rect x="${c + B + .5}" y="${r + B + .5}" width="6" height="6" fill="none" stroke="${QR_INK}" stroke-width="1"/>` +
+      `<rect x="${c + B + 2}" y="${r + B + 2}" width="3" height="3"/>`).join("");
+    const pad = .6, size = hole + 2 - 2 * pad, o = h0 - 1 + pad + B;
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${n} ${n}" shape-rendering="geometricPrecision">` +
+      `<rect width="${n}" height="${n}" fill="#fff"/><g fill="${QR_INK}">${dots}${eyes}</g>` +
+      `<svg x="${o}" y="${o}" width="${size}" height="${size}" viewBox="0 0 100 100">${MONOGRAM}</svg></svg>`;
   }
   function ownerPanel(d) {
     return `<div class="owner"><h4><i class="fas fa-user-pen"></i> Owner — only visible when signed in</h4>
@@ -89,7 +109,7 @@
         <div class="hrs">${d.hours.map(h => `<div class="${h.startsWith(C.today) ? "today" : ""}">${esc(h)}</div>`).join("")}</div>
         ${ph > 1 ? `<div class="gal">${d.photos.slice(1).map((p, i) => `<div style="${bg(d, i + 1)}"></div>`).join("")}</div>` : ""}
         ${C.owner ? ownerPanel(d) : ""}</div>
-      <div class="dr">${d.loc ? '<button type="button" class="minw" aria-label="Expand map"><div class="mini" id="rs-mini"></div><span class="mxh"><i class="fas fa-expand"></i> Expand</span></button>' : ""}<div class="qr">${qrSvg(d.maps)}</div>
+      <div class="dr">${d.loc ? '<button type="button" class="minw" aria-label="Expand map"><div class="mini" id="rs-mini"></div><span class="mxh"><i class="fas fa-expand"></i> Expand</span></button>' : ""}<div class="qr">${qrSvg(d.maps.replace(/&g_mp=[^&]*/, ""))}</div>
         <div class="cap">Scan for directions, menu &amp; reviews on your phone</div><button type="button" class="save"></button></div>`;
     sync();
     ov.classList.add("show");
@@ -155,9 +175,7 @@
   $("rs-send").addEventListener("click", () => {
     if (!list.length || typeof qrcode === "undefined") return;
     const url = C.shortlistUrl + "#" + list.map(s => encodeURIComponent(D[s].name) + "~" + D[s].pid).join("|");
-    const q = qrcode(0, "L"); q.addData(url); q.make();
-    $("rs-sqr").innerHTML = q.createImgTag(8, 8);
-    $("rs-surl").textContent = url;
+    $("rs-sqr").innerHTML = qrSvg(url);
     sov.classList.add("show");
   });
 
