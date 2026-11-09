@@ -122,6 +122,7 @@ def response(json_data=None, content=b"", content_type="application/json"):
 class RefreshTests(TestCase):
     def setUp(self):
         Restaurant.objects.exclude(slug__in=["bolacco-cafe", "fondue-stube"]).delete()
+        Restaurant.objects.filter(slug="fondue-stube").update(place_id="")  # a place without an ID
         self.r = Restaurant.objects.get(slug="bolacco-cafe")
 
     def fake_get(self, url, **kwargs):
