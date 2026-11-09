@@ -102,8 +102,7 @@ body.rs-page{font-family:"Segoe UI",system-ui,sans-serif;color:#e8eef5;overflow:
 .save.saved{background:rgba(255,255,255,.1);color:#e8eef5}
 .sdlg{width:560px;border-radius:26px;background:#17151d;border:1px solid rgba(255,255,255,.12);padding:30px;text-align:center}
 .sdlg h3{margin:0 0 6px;font-size:24px;font-weight:600}.sdlg p{opacity:.65;margin:0 0 18px;font-size:15px;line-height:1.45}
-.sdlg .qr{width:300px;height:300px;margin:0 auto}.sdlg .qr img{image-rendering:pixelated}
-.sdlg .u{font-size:11px;opacity:.35;word-break:break-all;margin-top:12px}
+.sdlg .qr{width:340px;height:340px;margin:0 auto}
 
 .owner{margin-top:18px;border:1px dashed rgba(124,196,255,.5);border-radius:14px;padding:14px 16px;background:rgba(124,196,255,.06)}
 .owner h4{margin:0 0 10px;font-size:12px;letter-spacing:.15em;text-transform:uppercase;color:#7cc4ff}
