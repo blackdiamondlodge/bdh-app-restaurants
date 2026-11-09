@@ -25,6 +25,12 @@ body.rs-page{font-family:"Segoe UI",system-ui,sans-serif;color:#e8eef5;overflow:
 .rc{cursor:pointer;border-radius:20px;overflow:hidden;background:linear-gradient(160deg,rgba(255,255,255,.11),rgba(255,255,255,.035));
   border:1px solid rgba(255,255,255,.1);box-shadow:0 14px 34px rgba(0,0,0,.3);display:flex;flex-direction:column;transition:transform .15s}
 .rc:active{transform:scale(.98)}.rc.hide{display:none}
+.rc.off .art{box-shadow:inset 0 0 0 999px rgba(0,0,0,.35)}
+.rc.off .art.ph{background-color:#808080;background-blend-mode:luminosity}
+.rc.off .art:not(.ph){background:radial-gradient(circle at 30% 20%,#6b7280,#2b3038)}
+.rc.off .body{opacity:.6}
+.offb{position:absolute;left:10px;bottom:10px;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);font-size:12px;padding:4px 10px;
+  border-radius:999px;color:#d6dbe1}.offb i{margin-right:3px;opacity:.8}
 .rc.hidden{opacity:.4}.rc.hidden .nm::after{content:" · hidden";font-size:12px;color:#7cc4ff}
 .art{flex:none;height:118px;position:relative;display:grid;place-items:center;font-size:26px;color:rgba(255,255,255,.9);
   background:radial-gradient(circle at 30% 20%,var(--c1),var(--c2))}
@@ -109,7 +115,7 @@ body.rs-page{font-family:"Segoe UI",system-ui,sans-serif;color:#e8eef5;overflow:
 .lpin span{transform:rotate(-45deg);font:700 9px serif;color:#000}
 .rpin{width:44px;height:44px;border-radius:50%;border:3px solid #fff;background:radial-gradient(circle at 30% 20%,var(--c1),var(--c2));
   background-size:cover;background-position:center;display:grid;place-items:center;color:#fff;font-size:17px;box-shadow:0 4px 12px rgba(0,0,0,.6);cursor:pointer}
-.rpin.pk{border-color:#ffc24a}.rpin.sm{width:22px;height:22px;border-width:2px}
+.rpin.pk{border-color:#ffc24a}.rpin.off{filter:grayscale(1);opacity:.75}.rpin.sm{width:22px;height:22px;border-width:2px}
 .rlab{position:absolute;left:50%;top:48px;translate:-50% 0;white-space:nowrap;font:600 12px "Segoe UI",system-ui,sans-serif;color:#fff;
   text-shadow:0 1px 3px #000,0 0 6px #000}.lowz .rlab{display:none}
 .rcl{width:52px;height:52px;border-radius:50%;background:rgba(30,30,36,.92);border:3px solid #7cc4ff;color:#fff;font:700 20px "Segoe UI",system-ui,sans-serif;
