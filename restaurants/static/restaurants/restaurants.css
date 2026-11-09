@@ -87,7 +87,15 @@ body.rs-page{font-family:"Segoe UI",system-ui,sans-serif;color:#e8eef5;overflow:
 .hrs{display:grid;grid-template-columns:1fr 1fr;gap:4px 28px;font-size:14.5px;opacity:.75}.hrs .today{opacity:1;color:#fff;font-weight:600}
 .gal{display:flex;gap:10px;margin-top:18px}.gal div{flex:1;height:130px;border-radius:12px;background-size:cover;background-position:center}
 .dr{padding:24px 26px;background:rgba(255,255,255,.04);display:flex;flex-direction:column;align-items:center;text-align:center}
+.minw{position:relative;display:block;width:100%;padding:0;margin:0 0 16px;border:0;background:none;cursor:pointer;border-radius:14px}
+.minw .mini{margin:0;pointer-events:none}
+.mxh{position:absolute;right:8px;bottom:8px;z-index:500;padding:6px 11px;border-radius:999px;background:rgba(10,8,14,.78);
+  color:#fff;font-size:13px;font-weight:600;border:1px solid rgba(255,255,255,.18)}.mxh i{margin-right:4px}
 .mini{width:100%;height:190px;border-radius:14px;margin-bottom:16px;background:#111}
+.dlg{position:relative}.dlg.mxon{overflow:hidden}
+.mxw{position:absolute;inset:0;z-index:1000;background:#111}.mxw #rs-mx{position:absolute;inset:0}
+.mxc{position:absolute;top:18px;left:18px;z-index:1001;padding:12px 20px;border-radius:999px;border:1px solid rgba(255,255,255,.2);
+  background:rgba(23,21,29,.92);color:#fff;font-size:17px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.45)}.mxc i{margin-right:8px}
 .qr{background:#fff;border-radius:14px;padding:10px;width:160px;height:160px}.qr svg,.qr img{width:100%;height:100%;display:block}
 .dr .cap{font-size:14px;opacity:.65;margin-top:10px;line-height:1.4}
 .save{all:unset;margin-top:auto;width:100%;text-align:center;padding:14px 0;border-radius:14px;background:#ff7a90;color:#2a0d14;font-weight:700;font-size:16px;cursor:pointer}

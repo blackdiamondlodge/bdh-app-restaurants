@@ -89,16 +89,18 @@
         <div class="hrs">${d.hours.map(h => `<div class="${h.startsWith(C.today) ? "today" : ""}">${esc(h)}</div>`).join("")}</div>
         ${ph > 1 ? `<div class="gal">${d.photos.slice(1).map((p, i) => `<div style="${bg(d, i + 1)}"></div>`).join("")}</div>` : ""}
         ${C.owner ? ownerPanel(d) : ""}</div>
-      <div class="dr">${d.loc ? '<div class="mini" id="rs-mini"></div>' : ""}<div class="qr">${qrSvg(d.maps)}</div>
+      <div class="dr">${d.loc ? '<button type="button" class="minw" aria-label="Expand map"><div class="mini" id="rs-mini"></div><span class="mxh"><i class="fas fa-expand"></i> Expand</span></button>' : ""}<div class="qr">${qrSvg(d.maps)}</div>
         <div class="cap">Scan for directions, menu &amp; reviews on your phone</div><button type="button" class="save"></button></div>`;
     sync();
     ov.classList.add("show");
     if (d.loc) setTimeout(() => miniMap(d), 30);
   }
-  function closeDlg() { ov.classList.remove("show"); delete dlg.dataset.slug; }
+  function closeDlg() { shrinkMap(); ov.classList.remove("show"); delete dlg.dataset.slug; }
 
   dlg.addEventListener("click", e => {
     if (e.target.closest(".dclose")) return closeDlg();
+    if (e.target.closest(".mxc")) return shrinkMap();
+    if (e.target.closest(".minw")) return expandMap(D[dlg.dataset.slug]);
     if (e.target.closest(".save")) return toggle(dlg.dataset.slug);
     const tg = e.target.closest(".tg");
     if (tg) return tg.classList.toggle("on");
@@ -188,18 +190,57 @@
   const lodgeIcon = () => L.divIcon({className: "", html: '<div class="lpin"><span>BDL</span></div>', iconSize: [34, 34], iconAnchor: [17, 17]});
   const rIcon = d => L.divIcon({className: "", iconSize: [44, 44], iconAnchor: [22, 22],
     html: `<div class="rpin${d.pick ? " pk" : ""}${d.st[0] === "season" ? " off" : ""}" style="--c1:${d.c1};--c2:${d.c2};${bg(d)}">${d.photos.length ? "" : `<i class="fas ${d.icon}"></i>`}</div><div class="rlab">${esc(d.name)}</div>`});
-  let mini, big, clus;
+  let mini, big, clus, mx;
   const bigM = {};
 
   function miniMap(d) {
     if (!hasL() || !$("rs-mini")) return;
     if (mini) mini.remove();
-    mini = L.map("rs-mini", {zoomControl: false, attributionControl: false});
+    mini = L.map("rs-mini", {zoomControl: false, attributionControl: false, dragging: false, touchZoom: false,
+      scrollWheelZoom: false, doubleClickZoom: false, boxZoom: false, keyboard: false});
     L.tileLayer(TILES).addTo(mini);
     L.marker(LODGE, {icon: lodgeIcon()}).addTo(mini);
     L.marker(d.loc, {icon: L.divIcon({className: "", html: `<div class="rpin sm" style="--c1:${d.c1};--c2:${d.c2}"></div>`, iconSize: [22, 22], iconAnchor: [11, 11]})}).addTo(mini);
     L.polyline([LODGE, d.loc], {color: "#7cc4ff", weight: 2, dashArray: "4 6"}).addTo(mini);
     mini.fitBounds([LODGE, d.loc], {padding: [28, 28]});
+  }
+  function recentreCtl(fn) {
+    const Ctl = L.Control.extend({
+      options: {position: "bottomright"},
+      onAdd() {
+        const bar = L.DomUtil.create("div", "leaflet-bar");
+        const a = L.DomUtil.create("a", "recentre", bar);
+        a.href = "#"; a.title = "Recentre"; a.setAttribute("role", "button");
+        a.innerHTML = '<i class="fas fa-crosshairs"></i>';
+        L.DomEvent.disableClickPropagation(bar);
+        L.DomEvent.on(a, "click", e => { L.DomEvent.preventDefault(e); fn(); });
+        return bar;
+      },
+    });
+    return new Ctl();
+  }
+  // Tapping the detail mini-map expands it over the whole dialog for zoom/pan.
+  function expandMap(d) {
+    if (!hasL() || !d || !d.loc || mx) return;
+    dlg.scrollTop = 0;
+    dlg.classList.add("mxon");
+    dlg.insertAdjacentHTML("beforeend", `<div class="mxw"><div id="rs-mx"></div>
+      <button type="button" class="mxc"><i class="fas fa-arrow-left"></i> Back to details</button></div>`);
+    mx = L.map("rs-mx", {zoomControl: false, maxZoom: 19});
+    L.control.zoom({position: "bottomright"}).addTo(mx);
+    const fit = () => mx.fitBounds([LODGE, d.loc], {padding: [90, 90]});
+    recentreCtl(fit).addTo(mx);
+    L.tileLayer(TILES, {attribution: "© OpenStreetMap", maxZoom: 19}).addTo(mx);
+    L.polyline([LODGE, d.loc], {color: "#7cc4ff", weight: 3, dashArray: "6 8"}).addTo(mx);
+    L.marker(LODGE, {icon: lodgeIcon()}).bindTooltip("Black Diamond Lodge", {permanent: true, direction: "bottom", offset: [0, 14], className: "ltip"}).addTo(mx);
+    L.marker(d.loc, {icon: rIcon(d)}).addTo(mx);
+    fit();
+  }
+  function shrinkMap() {
+    if (!mx) return;
+    mx.remove(); mx = null;
+    dlg.querySelector(".mxw")?.remove();
+    dlg.classList.remove("mxon");
   }
   function overview() {
     const near = Object.values(D).filter(d => d.loc && L.latLng(d.loc).distanceTo(LODGE) < 2500).map(d => d.loc);
@@ -210,19 +251,7 @@
     if (big) { big.invalidateSize(); return; }
     big = L.map("rs-map", {zoomControl: false, maxZoom: 19});
     L.control.zoom({position: "bottomright"}).addTo(big);
-    const Recentre = L.Control.extend({
-      options: {position: "bottomright"},
-      onAdd() {
-        const bar = L.DomUtil.create("div", "leaflet-bar");
-        const a = L.DomUtil.create("a", "recentre", bar);
-        a.href = "#"; a.title = "Recentre"; a.setAttribute("role", "button");
-        a.innerHTML = '<i class="fas fa-crosshairs"></i>';
-        L.DomEvent.disableClickPropagation(bar);
-        L.DomEvent.on(a, "click", e => { L.DomEvent.preventDefault(e); overview(); });
-        return bar;
-      },
-    });
-    new Recentre().addTo(big);
+    recentreCtl(overview).addTo(big);
     const lowZoom = () => $("rs-map").classList.toggle("lowz", big.getZoom() < 17);
     big.on("zoomend", lowZoom);
     L.tileLayer(TILES, {attribution: "© OpenStreetMap", maxZoom: 19}).addTo(big);

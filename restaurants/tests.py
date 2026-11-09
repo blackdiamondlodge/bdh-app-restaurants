@@ -301,6 +301,11 @@ class BrowserTests(StaticLiveServerTestCase):
         d.find_element(By.CSS_SELECTOR, '.rc[data-slug="bolacco-cafe"] .nm').click()
         wait.until(EC.visibility_of_element_located((By.ID, "rs-dlg")))
         self.assertIn("Get the sandwich", d.find_element(By.CSS_SELECTOR, "#rs-dlg .note").text)
+        # The mini-map expands over the dialog and collapses back to the details.
+        wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#rs-dlg .minw"))).click()
+        wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "#rs-dlg .mxw .leaflet-control-zoom-in")))
+        d.find_element(By.CSS_SELECTOR, "#rs-dlg .mxc").click()
+        self.assertFalse(d.find_elements(By.CSS_SELECTOR, "#rs-dlg .mxw"))
         d.find_element(By.CSS_SELECTOR, "#rs-dlg .dclose").click()
         d.find_element(By.CSS_SELECTOR, '.chip[data-f="pick"]').click()
         shown = [e.get_attribute("data-slug") for e in d.find_elements(By.CSS_SELECTOR, ".rc:not(.hide)")]
