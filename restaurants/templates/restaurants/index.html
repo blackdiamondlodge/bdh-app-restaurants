@@ -10,10 +10,20 @@
 <link rel="stylesheet" href="{% static 'restaurants/restaurants.css' %}">
 {% endblock %}
 
+{# Phone-only quick filters in the hub's sub-row; they drive the .fg chips below. #}
+{% block navbar_extras %}
+<div class="navbar-extras rs-qbar" id="rs-qbar">
+  <button type="button" class="qc qf" id="rs-fbtn"><i class="fas fa-sliders"></i>Filters<span class="n" id="rs-fn"></span></button>
+  <div class="rs-qs" id="rs-qs">{% for group, label, mode, chips in filter_groups %}{% for tag, text, icon in chips %}<button type="button" class="qc" data-q="{{ tag }}"><i class="fas {{ icon }}"></i>{{ text }}</button>{% endfor %}{% endfor %}<button type="button" class="qc" id="rs-qmap"><i class="fas fa-map-location-dot"></i>Map</button></div>
+  <i class="fas fa-chevron-right rs-qmore" aria-hidden="true"></i>
+</div>
+{% endblock %}
+
 {% block content %}
 <div class="rs-wrap" data-stay="{{ hub_stay_key }}">
   <div class="rs-main">
-    <div class="rs-top">
+    <div class="rs-top" id="rs-top">
+      <div class="rs-sh"><h3>Filters</h3><button type="button" class="rs-lnk" id="rs-fclear">Clear</button></div>
       {% for group, label, mode, chips in filter_groups %}
       <div class="fg" data-g="{{ group }}" data-m="{{ mode }}">
         <div class="fl">{{ label }}</div>
@@ -27,7 +37,9 @@
           <button type="button" data-v="map" aria-label="Map"><i class="fas fa-map-location-dot"></i></button>
         </div>
       </div>
+      <button type="button" class="rs-showbtn" id="rs-show">Show places</button>
     </div>
+    <div class="rs-psum" id="rs-psum">{{ summary }}</div>
 
     <div class="rs-grid" id="rs-grid">
       {% for r in items %}
@@ -51,13 +63,16 @@
     <div class="bigmap" id="rs-map" style="display:none"></div>
   </div>
 
-  <aside class="rail">
+  <aside class="rail" id="rs-rail">
     <h2><i class="fas fa-heart"></i>Your shortlist<button type="button" class="clear" id="rs-clear">Clear</button></h2>
     <div class="hint">Tap <i class="far fa-heart"></i> on any place to save it here and compare. It stays saved for your whole visit.</div>
     <div class="sl" id="rs-list"></div>
     <button type="button" class="send" id="rs-send"><i class="fas fa-mobile-screen-button"></i>Send list to my phone</button>
+        <button type="button" class="rs-sharebtn" id="rs-share"><i class="fas fa-share"></i>Share</button>
     <div class="attr">Ratings, hours &amp; photos from Google</div>
   </aside>
+      <div class="rs-dim" id="rs-dim"></div>
+      <button type="button" class="rs-fab" id="rs-fab"><i class="fas fa-heart"></i>Shortlist <span class="n" id="rs-fabn"></span></button>
 </div>
 
 <div class="ov" id="rs-ov"><div class="dlg" id="rs-dlg"></div></div>

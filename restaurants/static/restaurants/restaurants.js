@@ -6,6 +6,7 @@
   const ov = $("rs-ov"), sov = $("rs-sov"), dlg = $("rs-dlg");
   const STORE = "rs-shortlist", MAX = 8;
   const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+  const wrap = document.querySelector(".rs-wrap");
   const bg = (d, i = 0) => d.photos && d.photos[i] ? `background-image:url('${d.photos[i].url}')` : "";
 
   function stars(r, n) {
@@ -23,7 +24,7 @@
   // ── Shortlist: kept in localStorage for the whole stay ──
   // Cleared only when a different stay begins. A list made with no stay showing
   // (early arrival, or HA unreachable) is adopted by the next stay instead.
-  const stay = document.querySelector(".rs-wrap").dataset.stay || "";
+  const stay = wrap.dataset.stay || "";
   let list = [], owner = stay;
   try {
     const saved = JSON.parse(localStorage.getItem(STORE) || "null");
@@ -44,11 +45,14 @@
       b.classList.toggle("on", on);
       b.innerHTML = `<i class="${on ? "fas" : "far"} fa-heart"></i>`;
     });
-    $("rs-send").disabled = !list.length;
+    $("rs-send").disabled = $("rs-share").disabled = !list.length;
+    $("rs-fabn").textContent = list.length;
+    $("rs-fab").classList.toggle("show", list.length > 0);
     $("rs-list").innerHTML = list.length ? list.map(s => {
       const d = D[s], ph = d.photos.length;
       return `<div class="si" data-slug="${s}" style="--c1:${d.c1};--c2:${d.c2}"><div class="ic${ph ? " ph" : ""}" style="${bg(d)}">${ph ? "" : `<i class="fas ${d.icon}"></i>`}</div>` +
         `<div class="t"><div class="n">${esc(d.name)}</div><div class="s">${d.rating ? "★ " + d.rating.toFixed(1) + " · " : ""}${esc(d.st[1])}</div></div>` +
+        (dirUrl(d) ? `<a class="dir" href="${dirUrl(d)}" target="_blank" rel="noopener" aria-label="Directions"><i class="fas fa-diamond-turn-right"></i></a>` : "") +
         `<button type="button" class="x" data-x="${s}" aria-label="Remove"><i class="fas fa-xmark"></i></button></div>`;
     }).join("") : '<div class="empty"><i class="far fa-heart"></i>Nothing saved yet.<br>Tap the heart on a restaurant to add it.</div>';
     const cur = dlg.dataset.slug, sb = dlg.querySelector(".save");
@@ -58,6 +62,13 @@
       sb.innerHTML = on ? '<i class="fas fa-heart"></i> On your shortlist' : '<i class="far fa-heart"></i> Add to shortlist';
     }
     persist();
+  }
+  // Directions link for the phone shortlist sheet (hidden on the kiosk).
+  function dirUrl(d) {
+    if (!d.pid && !d.loc) return "";
+    const dest = d.pid ? d.name : d.loc.join(",");
+    return "https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent(dest) +
+      (d.pid ? "&destination_place_id=" + encodeURIComponent(d.pid) : "");
   }
   function toggle(s) { list = list.includes(s) ? list.filter(x => x !== s) : [s, ...list].slice(0, MAX); sync(); }
 
@@ -110,7 +121,8 @@
         ${ph > 1 ? `<div class="gal">${d.photos.slice(1).map((p, i) => `<div style="${bg(d, i + 1)}"></div>`).join("")}</div>` : ""}
         ${C.owner ? ownerPanel(d) : ""}</div>
       <div class="dr">${d.loc ? '<button type="button" class="minw" aria-label="Expand map"><div class="mini" id="rs-mini"></div><span class="mxh"><i class="fas fa-expand"></i> Expand</span></button>' : ""}<div class="qr">${qrSvg(d.maps.replace(/&g_mp=[^&]*/, ""))}</div>
-        <div class="cap">Scan for directions, menu &amp; reviews on your phone</div><button type="button" class="save"></button></div>`;
+        <div class="cap">Scan for directions, menu &amp; reviews on your phone</div>` +
+        `<a class="dmaps" href="${esc(d.maps)}" target="_blank" rel="noopener"><i class="fas fa-diamond-turn-right"></i> Directions &amp; reviews</a><button type="button" class="save"></button></div>`;
     sync();
     ov.classList.add("show");
     if (d.loc) setTimeout(() => miniMap(d), 30);
@@ -168,6 +180,7 @@
   $("rs-list").addEventListener("click", e => {
     const x = e.target.closest("[data-x]");
     if (x) return toggle(x.dataset.x);
+    if (e.target.closest(".dir")) return;
     const i = e.target.closest(".si");
     if (i) open_(i.dataset.slug);
   });
@@ -182,13 +195,35 @@
     const p = published[d.code];
     return p && p.n === d.name && p.p === d.pid ? d.code : encodeURIComponent(d.name) + "~" + d.pid;
   };
+  const listUrl = () => C.shortlistUrl + "#" + list.map(s => linkItem(D[s])).join(",");  // phone cameras percent-encode "|"
   $("rs-send").addEventListener("click", () => {
     if (!list.length || typeof qrcode === "undefined") return;
-    const url = C.shortlistUrl + "#" + list.map(s => linkItem(D[s])).join(",");  // phone cameras percent-encode "|"
+    const url = listUrl();
     $("rs-sqr").innerHTML = qrSvg(url);
     $("rs-sqr").dataset.url = url;
     sov.classList.add("show");
   });
+
+  // On phones the shortlist is a sheet; Share uses the OS share sheet when there is one.
+  $("rs-share").addEventListener("click", () => {
+    if (!list.length) return;
+    if (navigator.share) {
+      navigator.share({title: "Our restaurant shortlist", text: list.map(s => D[s].name).join(", "), url: listUrl()}).catch(() => {});
+    } else {
+      $("rs-send").click();
+    }
+  });
+
+  // ── Phone bottom sheets (filters, shortlist) ──
+  const sheet = which => {
+    wrap.classList.toggle("f-open", which === "f");
+    wrap.classList.toggle("s-open", which === "s");
+  };
+  $("rs-fbtn").addEventListener("click", () => sheet("f"));
+  $("rs-fab").addEventListener("click", () => sheet("s"));
+  $("rs-show").addEventListener("click", () => sheet(null));
+  $("rs-dim").addEventListener("click", () => sheet(null));
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && !ov.classList.contains("show")) sheet(null); });
 
   // ── Filters: chips within a group combine with the group's and/or ──
   function applyF() {
@@ -205,13 +240,25 @@
       r.classList.toggle("hide", !ok);
       n += ok;
     });
-    $("rs-count").textContent = sel.length ? `${n} of ${cards.length} match` : C.summary;
+    $("rs-count").textContent = $("rs-psum").textContent = sel.length ? `${n} of ${cards.length} match` : C.summary;
+    $("rs-show").textContent = `Show ${n} place${n === 1 ? "" : "s"}`;
+    const on = document.querySelectorAll(".fg .chip.on");
+    $("rs-fn").textContent = on.length || "";
+    $("rs-fbtn").classList.toggle("on", on.length > 0);
+    document.querySelectorAll(".qc[data-q]").forEach(q => q.classList.toggle("on", !!document.querySelector(`.fg .chip.on[data-f="${q.dataset.q}"]`)));
     $("rs-reset").style.visibility = sel.length ? "visible" : "hidden";
     $("rs-empty").style.display = n ? "none" : "block";
     syncMap();
   }
   document.querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => { c.classList.toggle("on"); applyF(); }));
-  $("rs-reset").addEventListener("click", () => { document.querySelectorAll(".chip.on").forEach(c => c.classList.remove("on")); applyF(); });
+  const resetF = () => { document.querySelectorAll(".chip.on").forEach(c => c.classList.remove("on")); applyF(); };
+  $("rs-reset").addEventListener("click", resetF);
+  $("rs-fclear").addEventListener("click", resetF);
+  // Quick chips are shortcuts to the real chips, so there's one filter state.
+  $("rs-qs").addEventListener("click", e => {
+    const q = e.target.closest(".qc[data-q]");
+    if (q) document.querySelector(`.fg .chip[data-f="${q.dataset.q}"]`)?.click();
+  });
 
   // ── Maps ──
   const LODGE = C.lodge, TILES = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
@@ -313,8 +360,12 @@
     const m = b.dataset.v === "map";
     $("rs-grid").style.display = m ? "none" : "";
     $("rs-map").style.display = m ? "" : "none";
+    $("rs-qmap").classList.toggle("on", m);
     if (m) bigMap();
   }));
+  $("rs-qmap").addEventListener("click", () =>
+    document.querySelector(`.vt button[data-v="${$("rs-qmap").classList.contains("on") ? "grid" : "map"}"]`).click());
 
   sync();
+  applyF();
 })();

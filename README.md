@@ -41,6 +41,12 @@ stay shows up is kept for that stay. "Send
 list to my phone" shows a QR to the static shortlist page, with the list encoded
 in the URL hash — nothing is stored server-side and it works off the lodge LAN.
 
+On phones (≤600px) the page switches to a single-column list: quick filter
+chips sit under the title, the full filter groups open in a bottom sheet, and a
+floating "♥ Shortlist" button opens the shortlist as a bottom sheet with
+directions links and a Share button (`navigator.share` with the same shortlist
+link, falling back to the QR).
+
 To keep that QR sparse, each place goes in the link as a 3-character code that
 the page looks up in its `places.json`. The kiosk only uses a code when the
 published file lists the same name and place ID; otherwise that place goes in
