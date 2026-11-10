@@ -184,7 +184,7 @@
   };
   $("rs-send").addEventListener("click", () => {
     if (!list.length || typeof qrcode === "undefined") return;
-    const url = C.shortlistUrl + "#" + list.map(s => linkItem(D[s])).join("|");
+    const url = C.shortlistUrl + "#" + list.map(s => linkItem(D[s])).join(",");  // phone cameras percent-encode "|"
     $("rs-sqr").innerHTML = qrSvg(url);
     sov.classList.add("show");
   });
