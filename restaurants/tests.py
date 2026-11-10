@@ -297,7 +297,9 @@ class ViewTests(TestCase):
 
 
 @tag("selenium")
-@override_settings(BDH_RESTAURANTS_GOOGLE_PLACES_API_KEY="")
+# The shortlist URL is unreachable so links fall back to the long form.
+@override_settings(BDH_RESTAURANTS_GOOGLE_PLACES_API_KEY="",
+                   BDH_RESTAURANTS_SHORTLIST_URL="http://127.0.0.1:9/shortlist/")
 class BrowserTests(StaticLiveServerTestCase):
     @classmethod
     def setUpClass(cls):
@@ -338,3 +340,8 @@ class BrowserTests(StaticLiveServerTestCase):
         self.assertEqual(shown, ["bolacco-cafe"])
         d.find_element(By.ID, "rs-send").click()
         wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "#rs-sqr svg")))
+        # Phone cameras percent-encode characters outside RFC 3986 (e.g. "|"),
+        # which the shortlist page has to undo, so keep the link to safe ones.
+        url = d.find_element(By.ID, "rs-sqr").get_attribute("data-url")
+        self.assertRegex(url, r"^http://127\.0\.0\.1:9/shortlist/#[A-Za-z0-9,~%._-]+$")
+        self.assertIn("Bolacco%20Caf%C3%A9~", url)
