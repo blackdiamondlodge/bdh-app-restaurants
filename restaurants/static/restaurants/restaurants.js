@@ -68,7 +68,7 @@
   const MONOGRAM = '<polygon points="50,3 97,50 50,97 3,50" fill="#0b1622"/><polygon points="50,11 89,50 50,89 11,50" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="1.5"/><path fill="#fff" d="M28 56.67V55.59H29.71V44.41H28V43.33H35.9Q38.34 43.33 39.57 44.15Q40.79 44.98 40.79 46.63Q40.79 47.82 39.95 48.51Q39.1 49.21 37.44 49.39Q39.45 49.58 40.52 50.46Q41.59 51.34 41.59 52.81Q41.59 54.79 40.1 55.73Q38.6 56.67 35.41 56.67ZM33.14 48.9H34.32Q35.85 48.9 36.59 48.34Q37.33 47.78 37.33 46.63Q37.33 45.47 36.62 44.94Q35.9 44.41 34.32 44.41H33.14ZM33.14 55.59H34.42Q36.13 55.59 36.95 54.91Q37.77 54.23 37.77 52.81Q37.77 51.38 36.94 50.67Q36.11 49.97 34.42 49.97H33.14ZM49.14 55.59H50.38Q52.47 55.59 53.44 54.25Q54.41 52.91 54.41 49.99Q54.41 47.08 53.45 45.75Q52.48 44.41 50.38 44.41H49.14ZM44 56.67V55.59H45.7V44.41H44V43.33H50.84Q54.43 43.33 56.33 45.05Q58.24 46.76 58.24 49.99Q58.24 53.23 56.33 54.95Q54.42 56.67 50.84 56.67ZM60.4 56.67V55.59H62.1V44.41H60.4V43.33H67.26V44.41H65.54V55.44H70.79V53.34H72V56.67Z"/>';
   function qrSvg(text) {
     if (typeof qrcode === "undefined") return "";
-    // Level H survives the logo best; long shortlist links drop to Q with a smaller
+    // Level H survives the logo best; long shortlist links drop to L with a smaller
     // logo so the code isn't too dense to scan off the screen.
     const long = text.length > 200, q = qrcode(0, long ? "L" : "H");
     q.addData(text); q.make();
@@ -172,9 +172,19 @@
     if (i) open_(i.dataset.slug);
   });
   $("rs-clear").addEventListener("click", () => { list = []; sync(); });
+  // The shortlist page resolves short codes via its published places.json. Use a
+  // code only when that file lists the same place; anything newer or changed
+  // falls back to the self-contained Name~PlaceID form, so links never break.
+  const published = {};
+  fetch(C.shortlistUrl + "places.json", {cache: "no-cache"}).then(r => r.ok ? r.json() : {})
+    .then(j => Object.assign(published, j.places || {})).catch(() => {});
+  const linkItem = d => {
+    const p = published[d.code];
+    return p && p.n === d.name && p.p === d.pid ? d.code : encodeURIComponent(d.name) + "~" + d.pid;
+  };
   $("rs-send").addEventListener("click", () => {
     if (!list.length || typeof qrcode === "undefined") return;
-    const url = C.shortlistUrl + "#" + list.map(s => encodeURIComponent(D[s].name) + "~" + D[s].pid).join("|");
+    const url = C.shortlistUrl + "#" + list.map(s => linkItem(D[s])).join("|");
     $("rs-sqr").innerHTML = qrSvg(url);
     sov.classList.add("show");
   });
