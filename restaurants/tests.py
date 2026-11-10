@@ -109,6 +109,32 @@ class SeedTests(TestCase):
         self.assertFalse(Restaurant.objects.filter(pick=True).exists())
 
 
+class ShortlistExportTests(TestCase):
+    def export(self, *args):
+        from io import StringIO
+        out = StringIO()
+        call_command("export_shortlist_places", *args, stdout=out, stderr=StringIO())
+        return json.loads(out.getvalue())["places"]
+
+    def test_seeded_places_get_distinct_codes(self):
+        places = self.export()
+        self.assertEqual(len(places), Restaurant.objects.count())
+        r = Restaurant.objects.get(slug="bolacco-cafe")
+        self.assertEqual(places[catalog.short_code(r.slug)], {"n": r.name, "p": r.place_id})
+
+    def test_merge_keeps_removed_places_and_refreshes_current(self):
+        import os
+        import tempfile
+        r = Restaurant.objects.get(slug="bolacco-cafe")
+        code = catalog.short_code(r.slug)
+        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as f:
+            json.dump({"v": 1, "places": {"zzz": {"n": "Gone", "p": "old"}, code: {"n": "Old name", "p": "x"}}}, f)
+        self.addCleanup(os.remove, f.name)
+        places = self.export("--merge", f.name)
+        self.assertEqual(places["zzz"], {"n": "Gone", "p": "old"})
+        self.assertEqual(places[code]["n"], r.name)
+
+
 def response(json_data=None, content=b"", content_type="application/json"):
     r = MagicMock()
     r.json.return_value = json_data
@@ -310,3 +336,5 @@ class BrowserTests(StaticLiveServerTestCase):
         d.find_element(By.CSS_SELECTOR, '.chip[data-f="pick"]').click()
         shown = [e.get_attribute("data-slug") for e in d.find_elements(By.CSS_SELECTOR, ".rc:not(.hide)")]
         self.assertEqual(shown, ["bolacco-cafe"])
+        d.find_element(By.ID, "rs-send").click()
+        wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "#rs-sqr svg")))

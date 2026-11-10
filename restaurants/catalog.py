@@ -7,6 +7,7 @@ refreshes, and rather than the server's tz database, which may not know that
 BC stays on UTC-7 all year.
 """
 import datetime as dt
+import hashlib
 import math
 from collections import namedtuple
 
@@ -210,6 +211,7 @@ def item(restaurant, photos, now=None):
                   for h in (data.get("regularOpeningHours") or {}).get("weekdayDescriptions", [])],
         "phone": data.get("nationalPhoneNumber", ""),
         "pid": restaurant.place_id,
+        "code": short_code(restaurant.slug),
         "loc": [loc["latitude"], loc["longitude"]] if loc else None,
         "amen": [[icon, label] for attr, icon, label in AMENITIES if data.get(attr)],
         "photos": photos,
@@ -218,6 +220,16 @@ def item(restaurant, photos, now=None):
         "note": restaurant.note,
         "hidden": restaurant.hidden,
     }
+
+
+def short_code(slug):
+    """A stable 3-character id for the shortlist link (see export_shortlist_places)."""
+    n = int(hashlib.sha1(slug.encode()).hexdigest(), 16)
+    out = ""
+    for _ in range(3):
+        n, d = divmod(n, 36)
+        out += "0123456789abcdefghijklmnopqrstuvwxyz"[d]
+    return out
 
 
 def sort_key(entry):
