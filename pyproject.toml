@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "bdh-app-restaurants"
-version = "1.1.9"
+version = "1.1.10"
 description = "Black Diamond Hub app: Sun Peaks restaurants with Google ratings, hours, photos and a guest shortlist"
 readme = "README.md"
 license = { text = "MIT" }

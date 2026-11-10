@@ -186,6 +186,7 @@
     if (!list.length || typeof qrcode === "undefined") return;
     const url = C.shortlistUrl + "#" + list.map(s => linkItem(D[s])).join(",");  // phone cameras percent-encode "|"
     $("rs-sqr").innerHTML = qrSvg(url);
+    $("rs-sqr").dataset.url = url;
     sov.classList.add("show");
   });
 
