@@ -7,6 +7,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
+from bdh_sdk import is_admin
 from bdh_sdk.settings import app_setting
 
 from . import catalog
@@ -34,7 +35,7 @@ def build_items(owner, now=None):
 
 def index(request):
     maybe_refresh_async()
-    owner = request.user.is_authenticated
+    owner = is_admin(request)
     now = timezone.now()
     items = build_items(owner, now)
     visible = [i for i in items if not i["hidden"]]
@@ -58,7 +59,7 @@ def index(request):
 
 def photo(request, pk):
     p = get_object_or_404(Photo.objects.select_related("restaurant"), pk=pk)
-    if p.restaurant.hidden and not request.user.is_authenticated:
+    if p.restaurant.hidden and not is_admin(request):
         raise Http404
     response = HttpResponse(bytes(p.image), content_type=p.content_type)
     # A refresh stores new rows (new URLs), so a photo URL never changes.
@@ -68,8 +69,8 @@ def photo(request, pk):
 
 @require_POST
 def owner_update(request, slug):
-    if not request.user.is_authenticated:
-        return JsonResponse({"error": "Sign in to edit restaurants."}, status=403)
+    if not is_admin(request):
+        return JsonResponse({"error": "Sign in as an admin to edit restaurants."}, status=403)
     restaurant = get_object_or_404(Restaurant, slug=slug)
     try:
         body = json.loads(request.body or b"{}")
