@@ -242,7 +242,8 @@ class ViewTests(TestCase):
         self.r.save()
         self.photo = Photo.objects.create(restaurant=self.r, image=b"img", author="Jun")
         Restaurant.objects.filter(slug="powder-hounds").update(hidden=True, note="secret")
-        self.user = get_user_model().objects.create_user("owner", password="pw")
+        self.user = get_user_model().objects.create_user("owner", password="pw", is_staff=True)
+        self.member = get_user_model().objects.create_user("member", password="pw")
 
     def test_guest_page(self):
         r = self.client.get(self.url)
@@ -257,6 +258,19 @@ class ViewTests(TestCase):
         r = self.client.get(self.url)
         self.assertContains(r, "Powder Hounds")
         self.assertTrue(r.context["config"]["owner"])
+
+    def test_non_admin_is_not_owner(self):
+        self.client.force_login(self.member)
+        r = self.client.get(self.url)
+        self.assertNotContains(r, "Powder Hounds")
+        self.assertFalse(r.context["config"]["owner"])
+        hidden = Photo.objects.create(restaurant=Restaurant.objects.get(slug="powder-hounds"), image=b"x")
+        self.assertEqual(self.client.get(reverse("restaurants_photo", args=[hidden.pk])).status_code, 404)
+        url = reverse("restaurants_owner", args=["bolacco-cafe"])
+        r = self.client.post(url, json.dumps({"pick": True}), content_type="application/json")
+        self.assertEqual(r.status_code, 403)
+        self.r.refresh_from_db()
+        self.assertFalse(self.r.pick)
 
     def test_photo(self):
         r = self.client.get(reverse("restaurants_photo", args=[self.photo.pk]))
